@@ -1,25 +1,23 @@
 ﻿@echo off
-echo Cleaning the project...
-dotnet clean
+echo Optimized database reset process starting...
 
 echo Dropping the database...
-dotnet ef database drop --force
+dotnet ef database drop -f --context ApplicationDbContext
 
 echo Removing migrations...
-:remove_migrations
-dotnet ef migrations remove
-if %errorlevel% == 0 goto remove_migrations
-echo All migrations removed.
+if exist "Data\Migrations" (
+    rd /s /q "Data\Migrations"
+    echo Migrations folder removed.
+) else (
+    echo Migrations folder not found.
+)
 
-echo Adding initial migration...
-dotnet ef migrations add InitialCreate
+echo Creating single migration...
+dotnet ef migrations add ResetMigration --context ApplicationDbContext -o Data/Migrations
 
-echo Updating database...
-dotnet ef database update
+echo Applying migration to the database...
+dotnet ef database update --context ApplicationDbContext
 
-echo Rebuilding the project...
-dotnet build
-
-echo Database reset and project rebuild complete!
+echo Database reset and migration applied successfully!
 echo Run 'dotnet run' to start the application.
 pause

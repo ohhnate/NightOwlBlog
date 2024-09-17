@@ -4,7 +4,7 @@ using SimpleBlogMVC.Models;
 
 namespace SimpleBlogMVC.Data
 {
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -12,6 +12,8 @@ namespace SimpleBlogMVC.Data
         }
 
         public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<BlogSettings> BlogSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -19,7 +21,11 @@ namespace SimpleBlogMVC.Data
 
             builder.Entity<BlogPost>()
                 .Property(b => b.Tags)
-                .HasMaxLength(5000); // You can adjust the max length as needed
+                .HasMaxLength(5000);
+
+            builder.Entity<ApplicationUser>()
+                .Property(u => u.CreatedAt)
+                .HasDefaultValueSql("GETDATE()");
         }
     }
 }

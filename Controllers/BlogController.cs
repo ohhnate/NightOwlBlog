@@ -1,44 +1,36 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SimpleBlogMVC.Models;
 using SimpleBlogMVC.Services;
-using Ganss.Xss;
+using Microsoft.AspNetCore.Identity;
 
 namespace SimpleBlogMVC.Controllers
 {
-    public class BlogController : Controller
+    public class BlogController : BaseController
     {
         private readonly BlogService _blogService;
-        private readonly ILogger<BlogController> _logger;
-        private readonly HtmlSanitizer _htmlSanitizer;
 
-        public BlogController(BlogService blogService, ILogger<BlogController> logger)
+        public BlogController(
+            BlogService blogService,
+            ILogger<BlogController> logger,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
+            : base(logger, userManager, signInManager)
         {
             _blogService = blogService;
-            _logger = logger;
-            _htmlSanitizer = new HtmlSanitizer();
-            _htmlSanitizer.AllowedTags.Add("iframe");
-            _htmlSanitizer.AllowedAttributes.Add("allow");
-            _htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
-            _htmlSanitizer.AllowedCssProperties.Add("width");
-            _htmlSanitizer.AllowedCssProperties.Add("height");
-            _htmlSanitizer.AllowedSchemes.Add("data");
         }
 
         public async Task<IActionResult> Index()
         {
-            var posts = await _blogService.GetAllPostsAsync();
-            return View(posts);
-        }
-
-        public async Task<IActionResult> Details(int id)
-        {
-            var post = await _blogService.GetPostByIdAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
+                var posts = await _blogService.GetAllPostsAsync();
+                return View(posts);
             }
-            return View(post);
+            catch (Exception ex)
+            {
+                return HandleException(ex, "Error occurred while fetching blog posts.");
+            }
         }
 
         [Authorize]
@@ -52,45 +44,47 @@ namespace SimpleBlogMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BlogPost blogPost)
         {
-            ModelState.Remove("Username");
+            if (!ModelState.IsValid)
+            {
+                return View("Upsert", blogPost);
+            }
 
-            if (ModelState.IsValid)
+            try
             {
-                try
+                var user = await GetCurrentUserAsync();
+                if (user == null)
                 {
-                    blogPost.Username = User.Identity.Name;
-                    // Sanitize the HTML content
-                    blogPost.Content = SanitizeHtml(blogPost.Content);
-                    await _blogService.CreatePostAsync(blogPost);
-                    _logger.LogInformation("Blog post created successfully");
-                    return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError(string.Empty, "User not found. Please try logging in again.");
+                    return View("Upsert", blogPost);
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error occurred while creating blog post");
-                    ModelState.AddModelError("", "An error occurred while creating the blog post. Please try again.");
-                }
+
+                blogPost.Username = user.UserName;
+                await _blogService.CreatePostAsync(blogPost);
+                return RedirectToAction(nameof(Index));
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogWarning("Invalid ModelState when creating blog post");
+                return HandleException(ex, "Error occurred while creating blog post.");
             }
-            return View("Upsert", blogPost);
         }
 
         [Authorize]
         public async Task<IActionResult> Edit(int id)
         {
-            var post = await _blogService.GetPostByIdAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
+                var post = await _blogService.GetPostByIdAsync(id);
+                if (post == null || !await IsUserOwnerAsync(post.Username))
+                {
+                    return Forbid();
+                }
+
+                return View("Upsert", post);
             }
-            if (post.Username != User.Identity.Name)
+            catch (Exception ex)
             {
-                return Forbid();
+                return HandleException(ex, $"Error occurred while fetching blog post with id {id} for editing.");
             }
-            return View("Upsert", post);
         }
 
         [HttpPost]
@@ -103,35 +97,65 @@ namespace SimpleBlogMVC.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
+                return View("Upsert", blogPost);
+            }
+
+            try
             {
                 var existingPost = await _blogService.GetPostByIdAsync(id);
-                if (existingPost.Username != User.Identity.Name)
+                if (!await IsUserOwnerAsync(existingPost.Username))
                 {
                     return Forbid();
                 }
-                blogPost.Username = User.Identity.Name;
-                // Sanitize the HTML content
-                blogPost.Content = SanitizeHtml(blogPost.Content);
+
                 await _blogService.UpdatePostAsync(blogPost);
                 return RedirectToAction(nameof(Index));
             }
-            return View("Upsert", blogPost);
+            catch (Exception ex)
+            {
+                return HandleException(ex, $"Error occurred while editing blog post with id {id}.");
+            }
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            try
+            {
+                var post = await _blogService.GetPostByIdAsync(id);
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                await _blogService.IncrementViewCountAsync(id);
+
+                return View(post);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, $"Error occurred while fetching blog post with id {id}.");
+            }
         }
 
         [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
-            var post = await _blogService.GetPostByIdAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
+                var post = await _blogService.GetPostByIdAsync(id);
+                if (post == null || !await IsUserOwnerAsync(post.Username))
+                {
+                    return Forbid();
+                }
+
+                return View(post);
             }
-            if (post.Username != User.Identity.Name)
+            catch (Exception ex)
             {
-                return Forbid();
+                return HandleException(ex, $"Error occurred while fetching blog post with id {id} for deletion.");
             }
-            return View(post);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -139,22 +163,21 @@ namespace SimpleBlogMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var post = await _blogService.GetPostByIdAsync(id);
-            if (post == null)
+            try
             {
-                return NotFound();
-            }
-            if (post.Username != User.Identity.Name)
-            {
-                return Forbid();
-            }
-            await _blogService.DeletePostAsync(id);
-            return RedirectToAction(nameof(Index));
-        }
+                var post = await _blogService.GetPostByIdAsync(id);
+                if (post == null || !await IsUserOwnerAsync(post.Username))
+                {
+                    return Forbid();
+                }
 
-        private string SanitizeHtml(string html)
-        {
-            return _htmlSanitizer.Sanitize(html);
+                await _blogService.DeletePostAsync(id);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, $"Error occurred while deleting blog post with id {id}.");
+            }
         }
     }
 }
