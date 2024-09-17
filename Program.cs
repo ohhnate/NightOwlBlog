@@ -37,6 +37,8 @@ builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<BlogService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.AddSassCompiler();
+
 // Add memory cache
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ICacheService, CacheService>();
