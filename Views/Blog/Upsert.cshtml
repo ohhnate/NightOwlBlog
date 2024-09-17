@@ -1,0 +1,106 @@
+﻿@model SimpleBlogMVC.Models.BlogPost
+@{
+    var isEditing = Model?.Id > 0;
+    ViewData["Title"] = isEditing ? "Edit Night Thought" : "Share Night Thought";
+}
+
+<div class="night-owl-header">
+    <h1>@ViewData["Title"]</h1>
+    <p>@(isEditing ? "Refine your nocturnal musings" : "Share your late-night inspirations")</p>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card night-owl-card">
+                <div class="card-body">
+                    <form asp-action="@(isEditing ? "Edit" : "Create")" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        @if (isEditing)
+                        {
+                                <input type="hidden" asp-for="Id" />
+                                <input type="hidden" asp-for="Username" />
+                                <input type="hidden" asp-for="CreatedAt" />
+                        }
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">
+                                <i class="fas fa-heading me-2"></i>Title
+                            </label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter the title of your night thought" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Content" class="form-label">
+                                <i class="fas fa-pen-nib me-2"></i>Content
+                            </label>
+                            <textarea asp-for="Content" id="editor" class="form-control" rows="10" placeholder="Pour your nocturnal musings here..."></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Tags" class="form-label">
+                                <i class="fas fa-tags me-2"></i>Tags
+                            </label>
+                            <input asp-for="Tags" class="form-control" placeholder="Enter tags separated by commas (e.g., night, thoughts, inspiration)" />
+                            <span asp-validation-for="Tags" class="text-danger"></span>
+                            <small class="form-text text-muted">Leave this field empty if you don't want to add any tags.</small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-@(isEditing ? "save" : "feather-alt") me-2"></i>
+                                @(isEditing ? "Save Changes" : "Share Thought")
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+        <script src="~/lib/tinymce/tinymce.min.js"></script>
+        <script>
+        tinymce.init({
+            selector: '#editor',
+            plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak media',
+            toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media',
+            menubar: 'file edit view insert format tools table help',
+            content_css: '/css/tinymce-night-owl.css',
+            skin: 'oxide-dark',
+            content_style: 'body { color: #e0e0e0; }',
+            setup: function (editor) {
+                editor.on('init', function () {
+                    this.getBody().style.backgroundColor = '#1e1e1e';
+                });
+            },
+            branding: false,
+            promotion: false,
+            media_live_embeds: true,
+            extended_valid_elements: 'iframe[src|frameborder|style|scrolling|class|width|height|name|align]',
+            custom_elements: 'iframe',
+            media_url_resolver: function (data, resolve, reject) {
+                if (data.url.indexOf('youtube.com') !== -1 || data.url.indexOf('youtu.be') !== -1) {
+                    var embedHtml = '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + getYoutubeId(data.url) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+                    resolve({html: embedHtml});
+                } else if (data.url.indexOf('.gif') !== -1) {
+                    var embedHtml = '<img src="' + data.url + '" alt="GIF" />';
+                    resolve({html: embedHtml});
+                } else {
+                    reject({msg: 'Not a supported media'});
+                }
+            }
+        });
+
+        function getYoutubeId(url) {
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+        </script>
+}

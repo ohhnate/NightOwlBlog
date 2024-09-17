@@ -1,0 +1,72 @@
+﻿@model IEnumerable<BlogPost>
+@using System.Text.RegularExpressions;
+@{
+    ViewData["Title"] = "Blog Posts";
+
+    string GetContentPreview(string content)
+    {
+        // Remove iframe tags
+        content = Regex.Replace(content, @"<iframe.*?</iframe>", "[Video]");
+        // Remove all other HTML tags
+        content = Regex.Replace(content, "<.*?>", string.Empty);
+        // Trim and limit to 100 characters
+        return content.Length <= 100 ? content : content.Substring(0, 100) + "...";
+    }
+}
+
+<div class="night-owl-header">
+    <h1>Nocturnal Narratives</h1>
+    <p>Explore the thoughts that come alive after dark</p>
+</div>
+
+<div class="container">
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="text-center mb-4">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-feather-alt me-2"></i>Share Your Night Thoughts
+            </a>
+        </div>
+    }
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card night-owl-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">By @item.Username</h6>
+                        <p class="card-text">@GetContentPreview(item.Content)</p>
+                        @if (!string.IsNullOrEmpty(item.Tags))
+                        {
+                            <div class="mb-2">
+                                @foreach (var tag in item.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="badge night-owl-tag me-1">@tag.Trim()</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>
+                            <i class="far fa-clock me-1"></i>
+                            @item.CreatedAt.ToString("MMMM dd, yyyy")
+                            @if (item.UpdatedAt.HasValue)
+                            {
+                                <span>(Updated @item.UpdatedAt.Value.ToString("MMMM dd, yyyy"))</span>
+                            }
+                        </small>
+                    </div>
+                    <div class="card-footer">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm">Read More</a>
+                        @if (User.Identity.Name == item.Username)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-sm ms-1">Edit</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

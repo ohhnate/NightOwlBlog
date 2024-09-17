@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="night-owl-header">
+    <h1>Welcome to Night Owl</h1>
+    <p>Where night thinkers come to share their insights</p>
+</div>
+
+<div class="container">
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h2 class="mb-4">Embrace Your Nocturnal Nature</h2>
+            <p class="lead">Night Owl is a sanctuary for those who find inspiration in the quiet hours of the night. Share your thoughts, connect with fellow night owls, and explore a world of ideas that come alive after dark.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a asp-controller="Blog" asp-action="Index" class="btn btn-primary btn-lg px-4 me-md-2">Explore Posts</a>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg px-4">Join the Flock</a>
+                }
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="/api/placeholder/600/400" alt="Night owl illustration" class="img-fluid rounded-3 shadow-lg">
+        </div>
+    </div>
+
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-dark text-light flex-shrink-0 me-3">
+                <i class="fas fa-feather-alt fa-2x"></i>
+            </div>
+            <div>
+                <h3>Write</h3>
+                <p>Pour your nocturnal musings onto the digital page. Share your stories, ideas, and midnight revelations with our community.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-dark text-light flex-shrink-0 me-3">
+                <i class="fas fa-comments fa-2x"></i>
+            </div>
+            <div>
+                <h3>Connect</h3>
+                <p>Engage with other night owls. Comment on posts, start meaningful conversations, and find your kindred spirits in the dark.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-dark text-light flex-shrink-0 me-3">
+                <i class="fas fa-lightbulb fa-2x"></i>
+            </div>
+            <div>
+                <h3>Discover</h3>
+                <p>Explore a diverse range of nocturnal narratives. Broaden your horizons with every post you read, illuminating your mind in the dark of night.</p>
+            </div>
+        </div>
+    </div>
+</div>

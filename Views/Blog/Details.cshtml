@@ -1,0 +1,64 @@
+﻿@model SimpleBlogMVC.Models.BlogPost
+@{
+    ViewData["Title"] = "Blog Post Details";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card night-owl-card">
+                <div class="card-body">
+                    <h1 class="card-title mb-3">@Model.Title</h1>
+                    <h6 class="card-subtitle mb-3 text-muted">
+                        <i class="fas fa-user me-2"></i>@Model.Username
+                    </h6>
+                    <div class="card-text blog-content">@Html.Raw(Model.Content)</div>
+                    @if (!string.IsNullOrEmpty(Model.Tags))
+                    {
+                        <div class="mb-3">
+                            <strong><i class="fas fa-tags me-2"></i>Tags:</strong>
+                            @foreach (var tag in Model.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <span class="badge night-owl-tag me-1">@tag.Trim()</span>
+                            }
+                        </div>
+                    }
+                    <p class="text-muted">
+                        <small>
+                            <i class="far fa-clock me-1"></i>
+                            Posted on @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <span>(Updated on @Model.UpdatedAt.Value.ToString("MMMM dd, yyyy"))</span>
+                            }
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                    @if (User.Identity?.Name == Model.Username)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-2"></i>Delete
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .blog-content img {
+        max-width: 100%;
+        height: auto;
+    }
+    .blog-content iframe {
+        max-width: 100%;
+    }
+</style>

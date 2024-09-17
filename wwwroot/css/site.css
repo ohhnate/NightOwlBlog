@@ -1,0 +1,148 @@
+/* Night Owl theme styles */
+
+:root {
+    --primary-color: #bb86fc;
+    --secondary-color: #03dac6;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-color-secondary: #9e9e9e;
+    --error-color: #cf6679;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.navbar {
+    background-color: var(--surface-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: var(--primary-color) !important;
+}
+
+.nav-link {
+    color: var(--text-color) !important;
+}
+
+.footer {
+    background-color: var(--surface-color);
+    color: var(--text-color-secondary);
+    border-top: 1px solid #333;
+}
+
+.card {
+    background-color: var(--surface-color);
+    border: none;
+    transition: transform 0.3s ease-in-out;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #000;
+}
+
+    .btn-primary:hover {
+        background-color: #a575e6;
+        border-color: #a575e6;
+    }
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: #000;
+    }
+
+.form-control {
+    background-color: #2d2d2d;
+    border-color: #444;
+    color: var(--text-color);
+}
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(187, 134, 252, 0.25);
+        background-color: #2d2d2d;
+        color: var(--text-color);
+    }
+
+.badge {
+    font-size: 0.8em;
+    padding: 0.35em 0.65em;
+}
+
+/* Custom styles for blog post cards */
+.blog-post-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+    .blog-post-card .card-body {
+        flex: 1 0 auto;
+    }
+
+    .blog-post-card .card-footer {
+        background-color: transparent;
+        border-top: 1px solid #333;
+    }
+
+/* Night Owl specific styles */
+.night-owl-header {
+    background: linear-gradient(135deg, #121212, #1e1e1e);
+    padding: 4rem 0;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+    .night-owl-header h1 {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .night-owl-header p {
+        font-size: 1.2rem;
+        color: var(--text-color-secondary);
+    }
+
+.night-owl-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .night-owl-card .card-title {
+        color: var(--primary-color);
+    }
+
+.night-owl-tag {
+    background-color: var(--secondary-color);
+    color: #000;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+    .night-owl-header h1 {
+        font-size: 2rem;
+    }
+
+    .night-owl-header p {
+        font-size: 1rem;
+    }
+}
