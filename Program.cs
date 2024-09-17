@@ -33,8 +33,10 @@ builder.Services.AddRazorPages();
 
 // Register repositories and services
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<BlogService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddSassCompiler();

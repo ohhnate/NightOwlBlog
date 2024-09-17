@@ -14,6 +14,7 @@ namespace SimpleBlogMVC.Data
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<BlogSettings> BlogSettings { get; set; }
+        public DbSet<CommentUpvote> CommentUpvotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -26,6 +27,27 @@ namespace SimpleBlogMVC.Data
             builder.Entity<ApplicationUser>()
                 .Property(u => u.CreatedAt)
                 .HasDefaultValueSql("GETDATE()");
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CommentUpvote>()
+                .HasKey(cu => new { cu.CommentId, cu.UserId });
+
+            builder.Entity<CommentUpvote>()
+                .HasOne(cu => cu.Comment)
+                .WithMany(c => c.Upvotes)
+                .HasForeignKey(cu => cu.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CommentUpvote>()
+                .HasOne(cu => cu.User)
+                .WithMany()
+                .HasForeignKey(cu => cu.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

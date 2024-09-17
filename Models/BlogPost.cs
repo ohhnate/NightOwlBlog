@@ -4,6 +4,11 @@ namespace SimpleBlogMVC.Models
 {
     public class BlogPost
     {
+        public BlogPost()
+        {
+            Comments = new List<Comment>();
+        }
+
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Title is required")]
@@ -21,12 +26,14 @@ namespace SimpleBlogMVC.Models
         public string? Tags { get; set; }
 
         [DataType(DataType.DateTime)]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [DataType(DataType.DateTime)]
         public DateTime? UpdatedAt { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Views must be a non-negative number")]
         public int Views { get; set; } = 0;
+
+        public ICollection<Comment> Comments { get; set; }
     }
 }

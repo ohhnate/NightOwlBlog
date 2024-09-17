@@ -2,6 +2,7 @@
 using SimpleBlogMVC.Models;
 using Ganss.Xss;
 using SimpleBlogMVC.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace SimpleBlogMVC.Services
 {
@@ -23,6 +24,12 @@ namespace SimpleBlogMVC.Services
             _htmlSanitizer.AllowedSchemes.Add("data");
         }
 
+        public void InvalidatePostCache(int postId)
+        {
+            string cacheKey = $"Post_{postId}";
+            _cacheService.Remove(cacheKey);
+        }
+
         public async Task<IEnumerable<BlogPost>> GetAllPostsAsync()
         {
             string cacheKey = "AllPosts";
@@ -40,8 +47,21 @@ namespace SimpleBlogMVC.Services
             string cacheKey = $"Post_{id}";
             if (!_cacheService.TryGet(cacheKey, out BlogPost post))
             {
-                post = await ExecuteAsync(() => _unitOfWork.BlogRepository.GetPostByIdAsync(id),
-                    $"Error occurred while fetching post with id {id}");
+                post = await ExecuteAsync(async () =>
+                {
+                    var dbPost = await _unitOfWork.BlogRepository.GetPostByIdAsync(id);
+                    if (dbPost != null)
+                    {
+                        // Ensure comments are loaded
+                        await _unitOfWork.Context.Entry(dbPost)
+                            .Collection(b => b.Comments)
+                            .Query()
+                            .Include(c => c.User)
+                            .LoadAsync();
+                    }
+                    return dbPost;
+                }, $"Error occurred while fetching post with id {id}");
+
                 if (post != null)
                 {
                     _cacheService.Set(cacheKey, post, TimeSpan.FromMinutes(10));
