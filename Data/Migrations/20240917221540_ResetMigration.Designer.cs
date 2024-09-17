@@ -12,7 +12,7 @@ using SimpleBlogMVC.Data;
 namespace SimpleBlogMVC.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240917191104_ResetMigration")]
+    [Migration("20240917221540_ResetMigration")]
     partial class ResetMigration
     {
         /// <inheritdoc />
@@ -337,15 +337,49 @@ namespace SimpleBlogMVC.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Username")
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BlogPostId");
 
+                    b.HasIndex("ParentCommentId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("SimpleBlogMVC.Models.CommentUpvote", b =>
+                {
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("CommentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommentUpvotes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -413,12 +447,58 @@ namespace SimpleBlogMVC.Data.Migrations
             modelBuilder.Entity("SimpleBlogMVC.Models.Comment", b =>
                 {
                     b.HasOne("SimpleBlogMVC.Models.BlogPost", "BlogPost")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("BlogPostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SimpleBlogMVC.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SimpleBlogMVC.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BlogPost");
+
+                    b.Navigation("ParentComment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SimpleBlogMVC.Models.CommentUpvote", b =>
+                {
+                    b.HasOne("SimpleBlogMVC.Models.Comment", "Comment")
+                        .WithMany("Upvotes")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SimpleBlogMVC.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SimpleBlogMVC.Models.BlogPost", b =>
+                {
+                    b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("SimpleBlogMVC.Models.Comment", b =>
+                {
+                    b.Navigation("Replies");
+
+                    b.Navigation("Upvotes");
                 });
 #pragma warning restore 612, 618
         }
