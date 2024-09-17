@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Generate Test Data";
+}
+
+<div class="container mt-4">
+    <h1>@ViewData["Title"]</h1>
+    <p>Use this page to generate test users and blog posts.</p>
+
+    <form asp-action="GenerateTestData" method="post">
+        <div class="mb-3">
+            <label for="numberOfUsers" class="form-label">Number of Users</label>
+            <input type="number" class="form-control" id="numberOfUsers" name="numberOfUsers" value="10" min="1" max="100">
+        </div>
+        <div class="mb-3">
+            <label for="postsPerUser" class="form-label">Posts per User</label>
+            <input type="number" class="form-control" id="postsPerUser" name="postsPerUser" value="5" min="1" max="20">
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Test Data</button>
+    </form>
+
+    @if (ViewBag.Result != null)
+    {
+        <div class="mt-4">
+            <h3>Generation Result:</h3>
+            <pre class="bg-dark text-light p-3 rounded">@ViewBag.Result</pre>
+        </div>
+    }
+</div>

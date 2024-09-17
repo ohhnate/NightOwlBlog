@@ -1,0 +1,192 @@
+﻿@model SimpleBlogMVC.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card night-owl-card">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                    {
+                        <img src="@Model.AvatarUrl" alt="User Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <img src="/images/default-avatar.png" alt="Default Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    }
+                    <h4 class="card-title">@Model.DisplayName</h4>
+                    <p class="card-text text-muted">Night Owl since @Model.User.CreatedAt.ToString("MMMM yyyy")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card night-owl-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Stats</h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3>@Model.TotalPosts</h3>
+                            <p class="text-muted">Posts</p>
+                        </div>
+                        <div class="col-4">
+                            <h3>@Model.TotalComments</h3>
+                            <p class="text-muted">Comments</p>
+                        </div>
+                        <div class="col-4">
+                            <h3>@Model.TotalViews</h3>
+                            <p class="text-muted">Views</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab" aria-controls="activity" aria-selected="true">Recent Activity</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Profile</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab" aria-controls="account" aria-selected="false">Account Settings</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">Blog Settings</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="dashboardTabsContent">
+                <div class="tab-pane fade show active" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                    <div class="card night-owl-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Activity</h5>
+                            <ul class="list-group list-group-flush">
+                                @foreach (var post in Model.RecentPosts.Take(5))
+                                {
+                                    <li class="list-group-item bg-transparent">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a href="@Url.Action("Details", "Blog", new { id = post.Id })" class="text-primary">@post.Title</a>
+                                            <small class="text-muted">@post.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                        <p class="mb-0 text-muted">@post.Content.Substring(0, Math.Min(post.Content.Length, 100))...</p>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <div class="card night-owl-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Update Your Profile</h5>
+                            <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label asp-for="DisplayName" class="form-label">Display Name</label>
+                                    <input asp-for="DisplayName" class="form-control" />
+                                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="Bio" class="form-label">Bio</label>
+                                    <textarea asp-for="Bio" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Bio" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="AvatarUrl" class="form-label">Profile Picture</label>
+                                    <input type="file" class="form-control" name="AvatarFile" accept="image/*" />
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="WebsiteUrl" class="form-label">Website URL</label>
+                                    <input asp-for="WebsiteUrl" class="form-control" />
+                                    <span asp-validation-for="WebsiteUrl" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="TwitterHandle" class="form-label">Twitter Handle</label>
+                                    <input asp-for="TwitterHandle" class="form-control" />
+                                    <span asp-validation-for="TwitterHandle" class="text-danger"></span>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Profile</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="account" role="tabpanel" aria-labelledby="account-tab">
+                    <div class="card night-owl-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Update Your Account Settings</h5>
+                            <form asp-action="UpdateAccountSettings" method="post">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">Email</label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="NewPassword" class="form-label">New Password</label>
+                                    <input asp-for="NewPassword" class="form-control" type="password" />
+                                    <span asp-validation-for="NewPassword" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="ConfirmNewPassword" class="form-label">Confirm New Password</label>
+                                    <input asp-for="ConfirmNewPassword" class="form-control" type="password" />
+                                    <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input asp-for="TwoFactorEnabled" class="form-check-input" />
+                                    <label asp-for="TwoFactorEnabled" class="form-check-label">Enable Two-Factor Authentication</label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Account Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="blog" role="tabpanel" aria-labelledby="blog-tab">
+                    <div class="card night-owl-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Update Your Blog Settings</h5>
+                            <form asp-action="UpdateBlogSettings" method="post">
+                                <div class="mb-3 form-check">
+                                    <input asp-for="AllowComments" class="form-check-input" />
+                                    <label asp-for="AllowComments" class="form-check-label">Allow comments on your posts</label>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input asp-for="ModerateComments" class="form-check-input" />
+                                    <label asp-for="ModerateComments" class="form-check-label">Moderate comments before publishing</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="PostsPerPage" class="form-label">Number of posts per page</label>
+                                    <input asp-for="PostsPerPage" class="form-control" type="number" min="1" max="50" />
+                                    <span asp-validation-for="PostsPerPage" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="DefaultPostCategory" class="form-label">Default post category</label>
+                                    <input asp-for="DefaultPostCategory" class="form-control" />
+                                    <span asp-validation-for="DefaultPostCategory" class="text-danger"></span>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Blog Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            $('#dashboardTabs button').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+        });
+    </script>
+}

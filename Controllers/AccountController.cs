@@ -1,23 +1,19 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using SimpleBlogMVC.Attributes;
 using SimpleBlogMVC.Models;
+using System.Threading.Tasks;
 
 namespace SimpleBlogMVC.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly ILogger<AccountController> _logger;
-
         public AccountController(
-            SignInManager<IdentityUser> signInManager,
-            UserManager<IdentityUser> userManager,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
+            : base(logger, userManager, signInManager)
         {
-            _signInManager = signInManager;
-            _userManager = userManager;
-            _logger = logger;
         }
 
         [HttpGet]
@@ -27,11 +23,13 @@ namespace SimpleBlogMVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RateLimit(300, 3)] // 3 requests per 5 minutes
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var user = new IdentityUser { UserName = model.Username, Email = model.Email, EmailConfirmed = true };
+                var user = new ApplicationUser { UserName = model.Username, Email = model.Email, DisplayName = model.Username };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -54,52 +52,44 @@ namespace SimpleBlogMVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RateLimit(300, 5)] // 5 requests per 5 minutes
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByNameAsync(model.UsernameOrEmail)
-                           ?? await _userManager.FindByEmailAsync(model.UsernameOrEmail);
-
-                if (user != null)
+                var result = await _signInManager.PasswordSignInAsync(model.UsernameOrEmail, model.Password, model.RememberMe, lockoutOnFailure: true);
+                if (result.Succeeded)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
-                    if (result.Succeeded)
-                    {
-                        _logger.LogInformation("User logged in.");
-                        return RedirectToAction("Index", "Home");
-                    }
-                    if (result.RequiresTwoFactor)
-                    {
-                        _logger.LogWarning("User login requires two factor authentication.");
-                        return RedirectToPage("./LoginWith2fa", new { ReturnUrl = "/Home/Index", RememberMe = model.RememberMe });
-                    }
-                    if (result.IsLockedOut)
-                    {
-                        _logger.LogWarning("User account locked out.");
-                        return RedirectToPage("./Lockout");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Invalid login attempt.");
-                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    }
+                    _logger.LogInformation("User logged in.");
+                    return RedirectToAction("Index", "Home");
+                }
+                if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return RedirectToAction("Lockout");
                 }
                 else
                 {
-                    _logger.LogWarning("User not found.");
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 }
             }
-
             return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
+            _logger.LogInformation("User logged out.");
             return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult Lockout()
+        {
+            return View();
         }
     }
 }
