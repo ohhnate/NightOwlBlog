@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using SimpleBlogMVC.Attributes;
 using SimpleBlogMVC.Models;
 using System.Threading.Tasks;
 
@@ -24,26 +23,38 @@ namespace SimpleBlogMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RateLimit(300, 3)] // 3 requests per 5 minutes
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
+                var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError(string.Empty, "Email address is already in use.");
+                    return View(model);
+                }
+
                 var user = new ApplicationUser { UserName = model.Username, Email = model.Email, DisplayName = model.Username };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation($"User created a new account with password. Username: {user.UserName}");
+
+                    // Automatically confirm the email
+                    await _userManager.ConfirmEmailAsync(user, await _userManager.GenerateEmailConfirmationTokenAsync(user));
+
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
+                    _logger.LogWarning($"User registration error: {error.Description}");
                 }
             }
             return View(model);
         }
+
 
         [HttpGet]
         public IActionResult Login()
@@ -53,24 +64,46 @@ namespace SimpleBlogMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RateLimit(300, 5)] // 5 requests per 5 minutes
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.UsernameOrEmail, model.Password, model.RememberMe, lockoutOnFailure: true);
-                if (result.Succeeded)
+                _logger.LogInformation($"Attempting to log in user: {model.UsernameOrEmail}");
+                var user = await _userManager.FindByEmailAsync(model.UsernameOrEmail);
+                if (user == null)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return RedirectToAction("Index", "Home");
+                    user = await _userManager.FindByNameAsync(model.UsernameOrEmail);
                 }
-                if (result.IsLockedOut)
+
+                if (user != null)
                 {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToAction("Lockout");
+                    _logger.LogInformation($"User found: {user.UserName}");
+
+                    var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation($"User {user.UserName} logged in successfully.");
+                        return RedirectToAction("Index", "Home");
+                    }
+                    if (result.IsLockedOut)
+                    {
+                        _logger.LogWarning($"User account {user.UserName} locked out.");
+                        return RedirectToAction("Lockout");
+                    }
+                    if (result.IsNotAllowed)
+                    {
+                        _logger.LogWarning($"Login not allowed for user: {user.UserName}. Email confirmed: {user.EmailConfirmed}");
+                        ModelState.AddModelError(string.Empty, "Unable to log in. Please contact support.");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Invalid password for user: {user.UserName}");
+                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    }
                 }
                 else
                 {
+                    _logger.LogWarning($"User not found: {model.UsernameOrEmail}");
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 }
             }

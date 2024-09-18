@@ -1,8 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using SimpleBlogMVC.Services.Interfaces;
-using System;
 
-namespace SimpleBlogMVC.Services
+namespace SimpleBlogMVC.Services.Implementations
 {
     public class CacheService : ICacheService
     {

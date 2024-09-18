@@ -181,12 +181,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        $(document).ready(function () {
-            $('#dashboardTabs button').on('click', function (e) {
-                e.preventDefault();
-                $(this).tab('show');
-            });
-        });
-    </script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
 }

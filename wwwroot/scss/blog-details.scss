@@ -1,0 +1,75 @@
+﻿@import 'site'; 
+
+.blog-content {
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+%comment-base {
+    border: 1px solid lighten($surface-color, 10%);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: $surface-color;
+}
+
+.comment, .reply {
+    @extend %comment-base;
+}
+
+.comment-header, .reply-header {
+    margin-bottom: 0.5rem;
+}
+
+.comment-actions, .reply-actions {
+    margin-top: 0.5rem;
+}
+
+.author-comment {
+    border-left: 3px solid $primary-color;
+}
+
+.my-comment {
+    background-color: lighten($surface-color, 5%);
+}
+
+.comment, .reply {
+    .badge {
+        background-color: $primary-color;
+        color: #000;
+    }
+}
+
+.upvote-count {
+    color: $text-color;
+}
+
+@mixin button-variant($color) {
+    color: $color;
+    border-color: $color;
+
+    &:hover {
+        background-color: $color;
+        color: #000;
+    }
+}
+
+.btn-outline {
+    &-primary {
+        @include button-variant($primary-color);
+    }
+
+    &-secondary {
+        @include button-variant($secondary-color);
+    }
+
+    &-warning {
+        @include button-variant(#ffb86c);
+    }
+
+    &-danger {
+        @include button-variant($error-color);
+    }
+}

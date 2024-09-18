@@ -2,20 +2,20 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SimpleBlogMVC.Models;
-using SimpleBlogMVC.Services;
+using SimpleBlogMVC.Services.Interfaces;
 
 namespace SimpleBlogMVC.Controllers
 {
     [Authorize]
     public class DashboardController : BaseController
     {
-        private readonly BlogService _blogService;
+        private readonly IBlogService _blogService;
 
         public DashboardController(
+            IBlogService blogService,
             ILogger<DashboardController> logger,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
-            BlogService blogService)
+            SignInManager<ApplicationUser> signInManager)
             : base(logger, userManager, signInManager)
         {
             _blogService = blogService;

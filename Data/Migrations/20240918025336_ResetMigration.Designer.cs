@@ -12,7 +12,7 @@ using SimpleBlogMVC.Data;
 namespace SimpleBlogMVC.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240917221540_ResetMigration")]
+    [Migration("20240918025336_ResetMigration")]
     partial class ResetMigration
     {
         /// <inheritdoc />

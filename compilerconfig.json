@@ -12,5 +12,12 @@
     "minify": {
       "enabled": true
     }
+  },
+  {
+    "outputFile": "wwwroot/css/blog-details.css",
+    "inputFile": "wwwroot/scss/blog-details.scss",
+    "minify": {
+      "enabled": true
+    }
   }
 ]

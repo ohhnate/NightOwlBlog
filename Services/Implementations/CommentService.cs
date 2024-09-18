@@ -2,7 +2,7 @@
 using SimpleBlogMVC.Models;
 using SimpleBlogMVC.Services.Interfaces;
 
-namespace SimpleBlogMVC.Services
+namespace SimpleBlogMVC.Services.Implementations
 {
     public class CommentService : ICommentService
     {

@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SimpleBlogMVC.Data;
-using SimpleBlogMVC.Services;
 using SimpleBlogMVC.Models;
+using SimpleBlogMVC.Services;
+using SimpleBlogMVC.Services.Interfaces;
 using SimpleBlogMVC.Data.Repositories.Interfaces;
 using SimpleBlogMVC.Data.Repositories.Implementations;
-using SimpleBlogMVC.Services.Interfaces;
 using SimpleBlogMVC.Middleware;
+using SimpleBlogMVC.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,25 +32,24 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// Register repositories and services
+// Register repositories
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-builder.Services.AddScoped<ApplicationDbContext>();
-builder.Services.AddScoped<BlogService>();
-builder.Services.AddScoped<ICommentService, CommentService>();
+
+// Register services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-builder.Services.AddSassCompiler();
-
-// Add memory cache
-builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ICacheService, CacheService>();
+
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
 }
 else
@@ -58,7 +58,6 @@ else
     app.UseHsts();
 }
 
-// Use global exception handler
 app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
